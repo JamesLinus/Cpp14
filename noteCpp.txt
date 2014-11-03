@@ -1,2 +1,8 @@
+Lecture note: Dr. B. Stroustrup
+date: 11/03/14
+time: 04:30pm
+location: Siebel 
+
 1. don't store data unnecessarily
 2. compact data
+3. shared_pointers
