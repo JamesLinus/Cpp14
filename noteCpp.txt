@@ -6,3 +6,6 @@ location: Siebel
 1. don't store data unnecessarily
 2. compact data
 3. shared_pointers
+
+
+formal semantics
