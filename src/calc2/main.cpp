@@ -12,6 +12,14 @@ const string result = "="; // to indicate whatever follows is a calculation resu
 *               Class: Token
 * ======================================== *
 */
+
+class Variable {
+public:
+    string name;
+    double value;
+    Variable (string n, double v) : name(n), value(v) {}
+};
+
 class Token {
 public:
     char kind;
@@ -264,9 +272,35 @@ Input comes from cin through the Token_stream called ts.
  */
 // a function to clean up the mess caused by bad inputs
 // purge the current token stream up unitl the first "print" symbol
+
+vector<Variable> var_table;
+
+// return the value of the Variable named "s"
+double get_value(string s)
+{
+    for (int i = 0; i < var_table.size(); ++i) {
+        if (var_table[i].name == s) {
+            return var_table[i].value;
+        }
+    }
+    error("get: undefined variable", s);
+}
+
+// set the Variable named "s" to "d"
+void set_value(string s, double d)
+{
+    for (int i = 0; i < var_table.size(); ++i)
+        if (var_table[i].name == s) {
+            var_table[i].value = d;
+            return;
+        }
+    error("set: underfined variable", s);
+}
+
 void clean_up_mess() { // better version
     ts.ignore(print);
 }
+
 
 void calculate()
 {
