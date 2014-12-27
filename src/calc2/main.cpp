@@ -7,6 +7,10 @@ const char quit = 'q'; // t.kind == quit means that t is quit Token
 const char print = ';'; // t.kind == print means that t  is a print Token
 const string prompt = ">"; //
 const string result = "="; // to indicate whatever follows is a calculation result
+const char let = 'L'; //  declaration token
+const char name = 'a'; // name token
+const string declarationKeyword = "let"; // declaration keyword
+
 /**
 * ======================================== *
 *               Class: Token
@@ -24,11 +28,14 @@ class Token {
 public:
     char kind;
     double value;
+    string name;
     // constructors
     Token(char ch)
-        :kind(ch), value(0) {}
+        : kind(ch), value(0) {}
     Token(char ch, double val)
-        :kind(ch), value(val) {}
+        : kind(ch), value(val) {}
+    Token(char ch, string n)
+        : kind(ch), name(n){}
 };
 
 
@@ -120,7 +127,49 @@ Token_stream ts;
 double primary();
 double term();
 double expression();
+double declaration();
+double statement();
+bool is_declared();
+double define_name();
 
+/**
+* ======================================== *
+*           Function: statement()
+* ======================================== *
+*/
+double statement()
+{
+    Token t = ts.get();
+    switch (t.kind) {
+        case let:
+            return declaration();
+        default:
+            ts.putback(t);
+            return expression();
+    }
+
+}
+/**
+* ======================================== *
+*           Function: declaration()
+* ======================================== *
+*/
+// assume we have seen "let"
+// handle: name = expression
+// declare a variable called "name" with initial value "expression"
+double declaration()
+{
+   Token t = ts.get();
+    if (t.kind != name) error ("name expected in declaration");
+    string var_name = t.name;
+
+    Token t2 = ts.get();
+    if (t2.kind != '=') error("= missing in declaration of ", var_name);
+
+    double d = expression();
+    define_name(var_name, d);
+    return d;
+}
 /**
 * ======================================== *
 *           Function: expression()
@@ -297,6 +346,22 @@ void set_value(string s, double d)
     error("set: underfined variable", s);
 }
 
+// check: is var already in var_table?
+bool is_declared(string var)
+{
+    for (int i = 0; i < var_table.size(); ++i)
+        if (var_table[i].name == var) return true;
+    return false;
+}
+
+// add (var,val) to the var_table
+double define_name(string var, double val)
+{
+    if (is_declared(var)) error(var, " declared twice");
+    var_table.push_back(Variable(var,val));
+    return val;
+}
+
 void clean_up_mess() { // better version
     ts.ignore(print);
 }
@@ -311,7 +376,7 @@ void calculate()
             while (t.kind == print) t = ts.get(); // disgard all "print" symbols
             if (t.kind == quit) return; // quit if "quit" symbol is encountered
             ts.putback(t);
-            cout << result << expression() << endl;
+            cout << result << statement() << endl;
         }
         catch (exception& e) {
             cerr << e.what() << endl;
